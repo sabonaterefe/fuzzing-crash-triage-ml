@@ -5,3 +5,7 @@ __pycache__/
 venv/
 fuzzing-env/
 results/crashes/raw_corpus/
+target/
+results/afl_output/
+src/harness
+src/seed_gen
