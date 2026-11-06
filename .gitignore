@@ -1,0 +1,7 @@
+*.o
+*.out
+__pycache__/
+*.pyc
+venv/
+fuzzing-env/
+results/crashes/raw_corpus/
