@@ -1,0 +1,8 @@
+{
+  "description": "Re-ran all 5 saved crash inputs against a harness built from a patched copy of target/c-ares with the real upstream CVE-2017-1000381 fix (rr_len < 7 bounds check) applied.",
+  "patch_applied": "docs/cve-2017-1000381-fix.patch",
+  "crashes_tested": 5,
+  "crashes_fixed": 5,
+  "crashes_still_crashing": 0,
+  "result": "All 5 crash inputs exited cleanly (exit code 0, no ASan report) after the patch, confirming the real upstream fix resolves the exact bug discovered by fuzzing."
+}

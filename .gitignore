@@ -9,3 +9,4 @@ target/
 results/afl_output/
 src/harness
 src/seed_gen
+src/harness_patched
