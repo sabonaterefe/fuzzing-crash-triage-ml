@@ -1,7 +1,7 @@
 {
-  "n_crashes": 5,
+  "n_crashes": 9,
   "naive_dedup": {
-    "n_groups": 5,
+    "n_groups": 9,
     "groups": [
       [
         "crashes.2026-11-06-13_44_08__id_000000,sig_06,src_000000,time_395485,execs_15523,op_havoc,rep_1"
@@ -17,6 +17,18 @@
       ],
       [
         "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14"
+      ],
+      [
+        "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1"
+      ],
+      [
+        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1"
+      ],
+      [
+        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2"
+      ],
+      [
+        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
       ]
     ]
   },
@@ -28,22 +40,30 @@
         "crashes.2026-11-06-13_44_08__id_000001,sig_06,src_000037,time_877860,execs_35016,op_havoc,rep_8",
         "crashes.2026-11-06-13_44_08__id_000002,sig_06,src_000033,time_2775493,execs_115082,op_havoc,rep_3",
         "crashes.2026-11-09-10_21_46__id_000003,sig_06,src_000000,time_4155700,execs_171092,op_havoc,rep_3",
-        "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14"
+        "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14",
+        "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1",
+        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
+        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2",
+        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
       ]
     ]
   },
   "hdbscan": {
-    "n_clusters": 1,
-    "n_noise": 1,
+    "n_clusters": 2,
+    "n_noise": 0,
     "groups": {
-      "-1": [
-        "crashes.2026-11-06-13_44_08__id_000000,sig_06,src_000000,time_395485,execs_15523,op_havoc,rep_1"
-      ],
       "0": [
+        "crashes.2026-11-06-13_44_08__id_000000,sig_06,src_000000,time_395485,execs_15523,op_havoc,rep_1",
+        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2"
+      ],
+      "1": [
         "crashes.2026-11-06-13_44_08__id_000001,sig_06,src_000037,time_877860,execs_35016,op_havoc,rep_8",
         "crashes.2026-11-06-13_44_08__id_000002,sig_06,src_000033,time_2775493,execs_115082,op_havoc,rep_3",
         "crashes.2026-11-09-10_21_46__id_000003,sig_06,src_000000,time_4155700,execs_171092,op_havoc,rep_3",
-        "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14"
+        "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14",
+        "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1",
+        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
+        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
       ]
     }
   }
