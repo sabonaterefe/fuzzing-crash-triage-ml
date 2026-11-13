@@ -1,0 +1,32 @@
+{
+  "crash_id": "crashes.2026-11-12-08_27_46__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2",
+  "source_file": "results/afl_output/default/crashes.2026-11-12-08:27:46/id:000007,sig:06,src:000022,time:415617900,execs:6194285,op:havoc,rep:2",
+  "error_summary": "==2965938==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7aae5dde003e at pc 0x59531cfddb28 bp 0x7fff0fb70730 sp 0x7fff0fb70728",
+  "frames": [
+    {
+      "frame": 0,
+      "function": "ares_parse_naptr_reply",
+      "file": "/mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/target/c-ares/ares_parse_naptr_reply.c",
+      "line": 137
+    },
+    {
+      "frame": 1,
+      "function": "main",
+      "file": "/mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/src/harness.c",
+      "line": 37
+    },
+    {
+      "frame": 2,
+      "function": "__libc_start_call_main",
+      "file": "csu/../sysdeps/nptl/libc_start_call_main.h",
+      "line": 59
+    },
+    {
+      "frame": 3,
+      "function": "__libc_start_main",
+      "file": "csu/../csu/libc-start.c",
+      "line": 360
+    }
+  ],
+  "raw_asan_output": "=================================================================\n==2965938==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7aae5dde003e at pc 0x59531cfddb28 bp 0x7fff0fb70730 sp 0x7fff0fb70728\nREAD of size 1 at 0x7aae5dde003e thread T0\n    #0 0x59531cfddb27 in ares_parse_naptr_reply /mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/target/c-ares/ares_parse_naptr_reply.c:137:31\n    #1 0x59531cfdbd3f in main /mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/src/harness.c:37:5\n    #2 0x7e6e5ec2a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16\n    #3 0x7e6e5ec2a717 in __libc_start_main csu/../csu/libc-start.c:360:3\n    #4 0x59531cef2464 in _start (/home/sabona/fuzzing-crash-triage-ml/src/harness+0x2e464) (BuildId: e1983f248d3590276ab2c3e0bd83d257dd93105c)\n\n0x7aae5dde003e is located 0 bytes after 46-byte region [0x7aae5dde0010,0x7aae5dde003e)\nallocated by thread T0 here:\n    #0 0x59531cf97a08 in malloc (/home/sabona/fuzzing-crash-triage-ml/src/harness+0xd3a08) (BuildId: e1983f248d3590276ab2c3e0bd83d257dd93105c)\n    #1 0x59531cfdbce3 in main /mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/src/harness.c:26:26\n    #2 0x7e6e5ec2a600 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:59:16\n    #3 0x7e6e5ec2a717 in __libc_start_main csu/../csu/libc-start.c:360:3\n    #4 0x59531cef2464 in _start (/home/sabona/fuzzing-crash-triage-ml/src/harness+0x2e464) (BuildId: e1983f248d3590276ab2c3e0bd83d257dd93105c)\n\nSUMMARY: AddressSanitizer: heap-buffer-overflow /mnt/c/Users/sebona/Desktop/fuzzing-crash-triage-ml/target/c-ares/ares_parse_naptr_reply.c:137:31 in ares_parse_naptr_reply\nShadow bytes around the buggy address:\n  0x7aae5dddfd80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7aae5dddfe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7aae5dddfe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7aae5dddff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7aae5dddff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n=>0x7aae5dde0000: fa fa 00 00 00 00 00[06]fa fa fa fa fa fa fa fa\n  0x7aae5dde0080: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7aae5dde0100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7aae5dde0180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7aae5dde0200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7aae5dde0280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07 \n  Heap left redzone:       fa\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==2965938==ABORTING\n"
+}

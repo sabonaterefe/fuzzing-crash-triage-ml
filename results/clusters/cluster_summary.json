@@ -1,7 +1,7 @@
 {
-  "n_crashes": 9,
+  "n_crashes": 13,
   "naive_dedup": {
-    "n_groups": 9,
+    "n_groups": 13,
     "groups": [
       [
         "crashes.2026-11-06-13_44_08__id_000000,sig_06,src_000000,time_395485,execs_15523,op_havoc,rep_1"
@@ -22,13 +22,25 @@
         "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1"
       ],
       [
-        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1"
+        "crashes.2026-11-12-08_27_46__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1"
       ],
       [
-        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2"
+        "crashes.2026-11-12-08_27_46__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2"
       ],
       [
-        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
+        "crashes.2026-11-12-08_27_46__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
+      ],
+      [
+        "crashes.2026-11-13-08_20_29__id_000009,sig_06,src_000081,time_461279766,execs_8952501,op_havoc,rep_5"
+      ],
+      [
+        "crashes__id_000010,sig_06,src_000011,time_520235486,execs_9279875,op_havoc,rep_1"
+      ],
+      [
+        "crashes__id_000011,sig_06,src_000033,time_521316086,execs_9385176,op_havoc,rep_1"
+      ],
+      [
+        "crashes__id_000012,sig_06,src_000010,time_529304180,execs_10119361,op_havoc,rep_8"
       ]
     ]
   },
@@ -42,9 +54,13 @@
         "crashes.2026-11-09-10_21_46__id_000003,sig_06,src_000000,time_4155700,execs_171092,op_havoc,rep_3",
         "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14",
         "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1",
-        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
-        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2",
-        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
+        "crashes.2026-11-12-08_27_46__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
+        "crashes.2026-11-12-08_27_46__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2",
+        "crashes.2026-11-12-08_27_46__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4",
+        "crashes.2026-11-13-08_20_29__id_000009,sig_06,src_000081,time_461279766,execs_8952501,op_havoc,rep_5",
+        "crashes__id_000010,sig_06,src_000011,time_520235486,execs_9279875,op_havoc,rep_1",
+        "crashes__id_000011,sig_06,src_000033,time_521316086,execs_9385176,op_havoc,rep_1",
+        "crashes__id_000012,sig_06,src_000010,time_529304180,execs_10119361,op_havoc,rep_8"
       ]
     ]
   },
@@ -54,7 +70,8 @@
     "groups": {
       "0": [
         "crashes.2026-11-06-13_44_08__id_000000,sig_06,src_000000,time_395485,execs_15523,op_havoc,rep_1",
-        "crashes__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2"
+        "crashes.2026-11-12-08_27_46__id_000007,sig_06,src_000022,time_415617900,execs_6194285,op_havoc,rep_2",
+        "crashes.2026-11-13-08_20_29__id_000009,sig_06,src_000081,time_461279766,execs_8952501,op_havoc,rep_5"
       ],
       "1": [
         "crashes.2026-11-06-13_44_08__id_000001,sig_06,src_000037,time_877860,execs_35016,op_havoc,rep_8",
@@ -62,8 +79,11 @@
         "crashes.2026-11-09-10_21_46__id_000003,sig_06,src_000000,time_4155700,execs_171092,op_havoc,rep_3",
         "crashes.2026-11-09-10_21_46__id_000004,sig_06,src_000059,time_70909400,execs_1089006,op_havoc,rep_14",
         "crashes.2026-11-11-09_25_49__id_000005,sig_06,src_000068,time_268213659,execs_3546592,op_havoc,rep_1",
-        "crashes__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
-        "crashes__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4"
+        "crashes.2026-11-12-08_27_46__id_000006,sig_06,src_000033,time_414403431,execs_6071200,op_havoc,rep_1",
+        "crashes.2026-11-12-08_27_46__id_000008,sig_06,src_000048,time_418511419,execs_6470719,op_havoc,rep_4",
+        "crashes__id_000010,sig_06,src_000011,time_520235486,execs_9279875,op_havoc,rep_1",
+        "crashes__id_000011,sig_06,src_000033,time_521316086,execs_9385176,op_havoc,rep_1",
+        "crashes__id_000012,sig_06,src_000010,time_529304180,execs_10119361,op_havoc,rep_8"
       ]
     }
   }

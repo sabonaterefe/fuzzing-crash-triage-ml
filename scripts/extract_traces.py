@@ -24,14 +24,25 @@ FRAME_RE = re.compile(
 
 
 def find_crash_files():
-    crash_files = []
-    for entry in AFL_OUTPUT_DIR.glob("crashes*"):
-        if entry.is_dir():
-            for f in entry.iterdir():
-                if f.is_file() and f.name.startswith("id:"):
+    """AFL++ renames crashes/ to crashes.<timestamp>/ on each fresh
+    start after a resume, so crash inputs end up spread across several
+    crashes.* directories -- and the SAME crash bytes can appear under
+    more than one directory name across resumes. Dedupe by content
+    hash (md5) so a renamed directory never double-counts a crash."""
+    import hashlib
 
+    seen_hashes = set()
+    crash_files = []
+    for entry in sorted(AFL_OUTPUT_DIR.glob("crashes*")):
+        if entry.is_dir():
+            for f in sorted(entry.iterdir()):
+                if f.is_file() and f.name.startswith("id:"):
+                    digest = hashlib.md5(f.read_bytes()).hexdigest()
+                    if digest in seen_hashes:
+                        continue
+                    seen_hashes.add(digest)
                     crash_files.append(f)
-    return sorted(crash_files)
+    return crash_files
 
 
 def run_harness(crash_file: Path) -> str:
