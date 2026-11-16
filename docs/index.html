@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML-Assisted Crash Triage for Coverage-Guided Fuzzing</title>
+<meta name="description" content="Fuzzing c-ares with AFL++/ASan, rediscovering CVE-2017-1000381, and triaging the resulting crashes with HDBSCAN instead of manual inspection.">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg-panel: #11141c;
+    --bg-panel-2: #161a24;
+    --border: #262b38;
+    --text: #e6e8ee;
+    --text-dim: #9aa3b5;
+    --accent: #6ee7b7;
+    --accent-2: #93c5fd;
+    --warn: #fca5a5;
+    --code-bg: #0a0c11;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfc;
+      --bg-panel: #ffffff;
+      --bg-panel-2: #f3f4f7;
+      --border: #e2e4ea;
+      --text: #1a1d24;
+      --text-dim: #5b6274;
+      --accent: #0f9d6b;
+      --accent-2: #2563eb;
+      --warn: #b42318;
+      --code-bg: #f3f4f7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+  header.hero {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.hero h1 {
+    font-size: 2rem;
+    line-height: 1.25;
+    margin: 0 0 12px;
+  }
+  header.hero p.lede {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    max-width: 640px;
+    margin: 0 0 20px;
+  }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .badge {
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    background: var(--bg-panel);
+  }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    padding: 16px 0;
+    font-size: 0.9rem;
+  }
+  nav.toc a { color: var(--accent-2); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  main section {
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  main section:last-of-type { border-bottom: none; }
+  h2 {
+    font-size: 1.4rem;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .num {
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  h3 { font-size: 1.05rem; margin: 28px 0 10px; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent-2); }
+  code {
+    font-family: var(--mono);
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  pre code { background: none; padding: 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .stat {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat .v {
+    font-size: 1.5rem;
+    font-weight: 650;
+    color: var(--accent);
+  }
+  .stat .l {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    margin: 14px 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.82rem; }
+  .callout {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 0.95rem;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .bars { margin: 20px 0; }
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .bar-label { width: 170px; flex: none; font-size: 0.86rem; color: var(--text-dim); }
+  .bar-track { flex: 1; background: var(--bg-panel-2); border-radius: 6px; height: 26px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: 0.82rem; font-weight: 600; color: #04120c; white-space: nowrap; }
+  .bar-fill.naive { background: var(--warn); color: #3a0a0a; }
+  .bar-fill.sig { background: var(--accent-2); color: #061226; }
+  .bar-fill.hdbscan { background: var(--accent); color: #04120c; }
+  .cluster-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .cluster-card h4 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+  }
+  .cluster-card .meta { color: var(--text-dim); font-size: 0.85rem; }
+  footer {
+    padding: 36px 0 64px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+  .diff-add { color: var(--accent); }
+  .diff-ctx { color: var(--text-dim); }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--bg-panel-2);
+    color: var(--text-dim);
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>ML-Assisted Crash Triage for Coverage-Guided Fuzzing</h1>
+    <p class="lede">
+      Fuzzing the c-ares DNS library with AFL++ and AddressSanitizer, rediscovering a real,
+      documented vulnerability (CVE-2017-1000381) from scratch, and triaging the resulting
+      crashes with density-based clustering (HDBSCAN) instead of manually reading every stack
+      trace by hand.
+    </p>
+    <div class="badges">
+      <span class="badge">AFL++ 4.33c</span>
+      <span class="badge">AddressSanitizer</span>
+      <span class="badge">HDBSCAN</span>
+      <span class="badge">c-ares 1.12.0</span>
+      <span class="badge">CVE-2017-1000381</span>
+      <span class="badge">Python 3</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#overview">Overview</a>
+    <a href="#methodology">Methodology</a>
+    <a href="#campaign">Campaign Results</a>
+    <a href="#triage">Crash Triage Comparison</a>
+    <a href="#root-cause">Root Cause</a>
+    <a href="#fix">Fix &amp; Verification</a>
+    <a href="#limitations">Limitations</a>
+    <a href="https://github.com/sabonaterefe/fuzzing-crash-triage-ml">Source code</a>
+  </nav>
+
+  <main>
+
+    <section id="overview">
+      <h2><span class="num">01</span> Overview</h2>
+      <p>
+        Most small fuzzing projects stop at "the fuzzer found some crashes." The harder,
+        more realistic problem &mdash; the one security teams actually deal with at scale &mdash;
+        is <strong>triage</strong>: given a pile of crashing inputs, which ones are actually the
+        same bug, and which are genuinely distinct issues worth separate attention?
+      </p>
+      <p>
+        This project builds that triage pipeline end to end, on a real target with a real,
+        documented vulnerability as ground truth:
+      </p>
+      <ol>
+        <li>Fuzz <a href="https://github.com/c-ares/c-ares">c-ares</a> (the DNS resolution
+          library used by Node.js and curl) at a version that predates a known CVE fix.</li>
+        <li>Collect crashes with AFL++ + AddressSanitizer over a multi-day campaign.</li>
+        <li>Extract and symbolize stack traces for every crash.</li>
+        <li>Compare three triage approaches of increasing sophistication: naive raw-output
+          deduplication, frame-signature matching (the approach real crash-reporting systems
+          like Mozilla Socorro use), and HDBSCAN clustering over vectorized stack frames.</li>
+        <li>Root-cause the findings against the actual upstream CVE patch, and verify the fix
+          resolves every crash.</li>
+      </ol>
+      <p>
+        The target vulnerability is <strong>CVE-2017-1000381</strong>: an out-of-bounds read in
+        <code>ares_parse_naptr_reply()</code>, fixed in c-ares 1.13.0. This project fuzzes
+        c-ares <strong>1.12.0</strong> (the version immediately before the fix) and rediscovers
+        the bug independently through fuzzing, without looking at the patch first.
+      </p>
+    </section>
+
+    <section id="methodology">
+      <h2><span class="num">02</span> Methodology</h2>
+
+      <h3>Target &amp; harness</h3>
+      <p>
+        c-ares <code>1.12.0</code> was built with <code>afl-clang-fast</code> and
+        AddressSanitizer (<code>-fsanitize=address -g -O1 -fno-omit-frame-pointer</code>).
+        A minimal harness reads a file, feeds its raw bytes into
+        <code>ares_parse_naptr_reply()</code>, and frees the result &mdash; isolating exactly
+        the code path under test.
+      </p>
+      <p>
+        Seed inputs weren't hand-rolled byte arrays. Instead, two valid NAPTR DNS responses
+        were generated using c-ares's own test infrastructure
+        (<code>test/dns-proto.h/.cc</code>), so the fuzzer starts from real, well-formed wire
+        format rather than guessing the DNS packet structure from nothing.
+      </p>
+
+      <h3>Fuzzing</h3>
+      <p>
+        AFL++ ran in persistent coverage-guided mode (<code>afl-fuzz</code>) against the
+        instrumented binary, with <code>ASAN_OPTIONS=abort_on_error=1</code> so AFL++ correctly
+        recognizes ASan-reported memory errors as crashes rather than silent hangs.
+      </p>
+
+      <h3>Crash triage methods compared</h3>
+      <table>
+        <tr><th>Method</th><th>Approach</th></tr>
+        <tr>
+          <td>Naive dedup</td>
+          <td>Exact match on raw ASan output. Represents "no triage logic at all."</td>
+        </tr>
+        <tr>
+          <td>Frame-signature matching</td>
+          <td>Dedup on the top-N stack frame function names, ignoring addresses/line
+            numbers &mdash; the real technique used by crash-reporting systems like
+            Mozilla Socorro.</td>
+        </tr>
+        <tr>
+          <td>HDBSCAN</td>
+          <td>TF-IDF vectorization of each crash's full frame sequence (function + file +
+            line), clustered with density-based HDBSCAN.</td>
+        </tr>
+      </table>
+      <p>
+        HDBSCAN was chosen over k-means deliberately: the number of distinct bugs in a crash
+        set is unknown ahead of time. K-means forces a predetermined <code>k</code>; HDBSCAN
+        infers cluster count from density and can explicitly label sparse, one-off crashes as
+        noise rather than force-fitting them into a bad cluster.
+      </p>
+
+      <h3>Tools</h3>
+      <table>
+        <tr><th>Tool</th><th>Purpose</th></tr>
+        <tr><td>AFL++ 4.33c</td><td>Coverage-guided fuzzing engine</td></tr>
+        <tr><td>AddressSanitizer</td><td>Memory-error detection at runtime</td></tr>
+        <tr><td>GDB</td><td>Manual crash inspection / confirmation</td></tr>
+        <tr><td>Python 3 + hdbscan, scikit-learn, numpy</td><td>Crash clustering pipeline</td></tr>
+        <tr><td>autotools</td><td>Building instrumented c-ares</td></tr>
+        <tr><td>WSL2 (Ubuntu)</td><td>Linux fuzzing environment on Windows</td></tr>
+      </table>
+    </section>
+
+    <section id="campaign">
+      <h2><span class="num">03</span> Fuzzing Campaign Results</h2>
+      <div class="grid">
+        <div class="stat"><div class="v">9+</div><div class="l">cumulative fuzzing days</div></div>
+        <div class="stat"><div class="v">3,056</div><div class="l">cycles completed</div></div>
+        <div class="stat"><div class="v">52%</div><div class="l">edge coverage of target</div></div>
+        <div class="stat"><div class="v">16</div><div class="l">unique crashes found</div></div>
+      </div>
+      <p>
+        The campaign ran intermittently across roughly two weeks on a personal laptop via WSL2
+        &mdash; including several unplanned interruptions from WSL restarts and system sleep,
+        which were diagnosed and resumed each time using AFL++'s autoresume capability without
+        losing prior progress. See <a href="#limitations">Limitations</a> for an honest account
+        of this.
+      </p>
+    </section>
+
+    <section id="triage">
+      <h2><span class="num">04</span> Crash Triage Comparison</h2>
+      <p>
+        All three methods were run on the same final set of <strong>16 unique crashes</strong>
+        (deduplicated by content hash). The results make the case for each method's practical
+        value:
+      </p>
+      <div class="bars">
+        <div class="bar-row">
+          <div class="bar-label">Naive dedup</div>
+          <div class="bar-track"><div class="bar-fill naive" style="width:100%">16 groups &mdash; fails completely</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Frame-signature</div>
+          <div class="bar-track"><div class="bar-fill sig" style="width:7%">1 group</div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">HDBSCAN</div>
+          <div class="bar-track"><div class="bar-fill hdbscan" style="width:14%">2 groups</div></div>
+        </div>
+      </div>
+      <p>
+        <strong>Naive dedup fails outright</strong>: it reports all 16 crashes as unique,
+        because AddressSanitizer embeds live memory addresses (heap pointer, program counter,
+        stack/base pointer) in every report. Even identical bugs never produce byte-identical
+        output twice. This is what "no real triage" looks like in practice.
+      </p>
+      <p>
+        <strong>Frame-signature matching</strong> correctly collapses all 16 crashes into a
+        single group, since it ignores addresses and line numbers, using only the top stack
+        frames' function names.
+      </p>
+      <p>
+        <strong>HDBSCAN finds more real structure</strong>: it splits the same 16 crashes into
+        two clean clusters with zero noise points, because it uses the full frame information
+        including exact line numbers. This split isn't an artifact &mdash; it corresponds to
+        two genuinely distinct trigger points within the same vulnerable function, confirmed in
+        the root-cause analysis below.
+      </p>
+      <div class="cluster-card">
+        <h4>Cluster 0 &mdash; 3 crashes</h4>
+        <div class="meta">All crash at <code>ares_parse_naptr_reply.c:137</code> &mdash; the
+          <code>order</code> field read</div>
+      </div>
+      <div class="cluster-card">
+        <h4>Cluster 1 &mdash; 13 crashes</h4>
+        <div class="meta">All crash at <code>ares_parse_naptr_reply.c:139</code> &mdash; the
+          <code>preference</code> field read</div>
+      </div>
+      <p>
+        This result held consistently at every checkpoint as the campaign ran longer
+        (re-verified at 5, 9, 13, and 16 crashes) &mdash; it's a reproducible finding, not a
+        small-sample coincidence.
+      </p>
+    </section>
+
+    <section id="root-cause">
+      <h2><span class="num">05</span> Root Cause</h2>
+      <p>
+        Both crash sites are in the same few lines of <code>ares_parse_naptr_reply.c</code>,
+        reading two fixed 16-bit fields with no check that the buffer actually has enough bytes
+        left:
+      </p>
+      <pre><code>vptr = aptr;
+naptr_curr-&gt;order = DNS__16BIT(vptr);        <span class="tag">line 137</span>
+vptr += sizeof(unsigned short);
+naptr_curr-&gt;preference = DNS__16BIT(vptr);   <span class="tag">line 139</span>
+vptr += sizeof(unsigned short);</code></pre>
+      <p>
+        If the record's remaining data is shorter than expected, reading <code>order</code>
+        (line 137) or the next two bytes for <code>preference</code> (line 139) walks past the
+        end of the heap-allocated response buffer &mdash; confirmed by AddressSanitizer as a
+        1-byte heap-buffer-overflow <strong>READ</strong> immediately past the allocated region
+        in every captured crash.
+      </p>
+      <div class="callout">
+        This matches the real, documented CVE-2017-1000381 advisory exactly. The official fix
+        (c-ares 1.13.0) adds a single bounds check before this block:
+        <pre><code><span class="diff-ctx">@@ -111,6 +111,13 @@ ares_parse_naptr_reply (const unsigned char *abuf, int alen,</span>
+           status = ARES_EBADRESP;
+           break;
+         }
+
+<span class="diff-add">+      /* RR must contain at least 7 bytes = 2 x int16 + 3 x name */
++      if (rr_len &lt; 7)
++        {
++          status = ARES_EBADRESP;
++          break;
++        }
++</span>
+       /* Check if we are really looking at a NAPTR record */
+       if (rr_class == C_IN &amp;&amp; rr_type == T_NAPTR)</code></pre>
+        7 bytes covers the two 16-bit fields plus the minimum 1-byte length prefix for each of
+        the three string fields that follow. One check upstream of both reads eliminates both
+        crash sites at once &mdash; which is exactly why HDBSCAN's two clusters are "the same
+        root cause, two trigger points," not two unrelated bugs.
+      </div>
+      <p>
+        Sources: <a href="https://c-ares.org/adv_20170620.html">c-ares official security
+        advisory</a>, <a href="https://bugzilla.redhat.com/show_bug.cgi?id=1463132">Red Hat
+        Bugzilla CVE-2017-1000381</a>.
+      </p>
+    </section>
+
+    <section id="fix">
+      <h2><span class="num">06</span> Fix &amp; Verification</h2>
+      <p>
+        The real upstream patch was applied to a separate, patched build of c-ares (leaving the
+        original vulnerable build untouched for the live campaign), and every saved crash input
+        was re-run against it as a regression test.
+      </p>
+      <div class="grid">
+        <div class="stat"><div class="v">16 / 16</div><div class="l">crashes resolved</div></div>
+        <div class="stat"><div class="v">0</div><div class="l">still crashing</div></div>
+      </div>
+      <p>
+        Every single crash input that previously triggered an ASan heap-buffer-overflow exits
+        cleanly (exit code 0, no ASan report) against the patched build. This confirms the bug
+        found by fuzzing is the actual documented vulnerability, verified with the real fix
+        rather than a guessed one.
+      </p>
+    </section>
+
+    <section id="limitations">
+      <h2><span class="num">07</span> Limitations &amp; Honest Notes</h2>
+      <ul>
+        <li>
+          The campaign ran on a personal laptop (WSL2 on Windows 11), not a dedicated fuzzing
+          server. It was interrupted several times by WSL restarts (most likely triggered by
+          Windows updates or the host sleeping for extended periods) and had to be resumed with
+          AFL++'s <code>AFL_AUTORESUME</code> mechanism each time. No crash data was lost across
+          these interruptions, but cumulative wall-clock time includes idle/suspended periods,
+          not pure continuous execution.
+        </li>
+        <li>
+          All 16 discovered crashes reduce to one underlying vulnerability class (a missing
+          bounds check hit at two adjacent lines). A longer campaign, a richer seed corpus, or
+          fuzzing additional parsing functions in c-ares would likely surface more diverse bug
+          classes, which would make the clustering comparison even more interesting to study.
+        </li>
+        <li>
+          HDBSCAN's TF-IDF-over-frame-text representation is simple by design, to keep the
+          method transparent and explainable. A production triage system would likely combine
+          this with additional signal (crash type, fuzzer-provided minimization, binary diffing)
+          rather than relying on stack traces alone.
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>
+      Full source, scripts, and raw data:
+      <a href="https://github.com/sabonaterefe/fuzzing-crash-triage-ml">github.com/sabonaterefe/fuzzing-crash-triage-ml</a>
+    </p>
+  </footer>
+</div>
+
+</body>
+</html>
